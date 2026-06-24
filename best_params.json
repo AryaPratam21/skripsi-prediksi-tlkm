@@ -1,0 +1,1 @@
+{"bilstm": {"filters": 64, "kernel_size": 2, "units": 134, "dropout": 0.26884502984310227, "lr": 0.007833849431591254, "batch_size": 64, "window_size": 30}, "cnn_lstm": {"filters": 32, "kernel_size": 4, "units": 117, "dropout": 0.2076783858314457, "lr": 0.0037656354534404872, "batch_size": 16, "window_size": 52}}
