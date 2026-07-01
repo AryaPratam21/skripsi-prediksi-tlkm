@@ -162,4 +162,4 @@ elif menu == "Tahap 7 & 8: Hasil & Proyeksi":
         st.error(f"File {file_t8} tidak ditemukan.")
 
 st.sidebar.markdown("---")
-st.sidebar.caption("Dashboard Riset Arya 2026")
+st.sidebar.caption("Dashboard Penelitian Prediksi Harga Saham PT TELKOM")
