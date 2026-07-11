@@ -1,0 +1,22 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Temporary logs
+log_tahap*.txt
+log_terminal.txt
+skripsi_run_all.log
+
+# Keras/TensorFlow model checkpoints (optional, uncomment if you don't want to push models)
+# *.h5
+# *.keras
+
+# Pickled files (scalers)
+# *.pkl
+
+# Data files
+# *.npz
+# *.csv
+# *.xlsx
