@@ -26,6 +26,134 @@ def df_to_markdown(df):
         rows.append(" | ".join(row_str))
     return f"| {headers} |\n| {separator} |\n" + "\n".join([f"| {r} |" for r in rows])
 
+# Fungsi menggambar chart loss menggunakan Chart.js (Bypass PyArrow)
+def draw_chartjs_loss(df):
+    epochs = list(range(1, len(df) + 1))
+    loss_col = 'loss' if 'loss' in df.columns else df.columns[1]
+    loss_train = list(df[loss_col].values)
+    loss_val = list(df['val_loss'].values) if 'val_loss' in df.columns else []
+    
+    datasets = [
+        {
+            "label": 'Loss (Train)',
+            "data": loss_train,
+            "borderColor": '#36a2eb',
+            "backgroundColor": 'rgba(54, 162, 235, 0.1)',
+            "fill": True,
+            "borderWidth": 2,
+            "tension": 0.1
+        }
+    ]
+    if loss_val:
+        datasets.append({
+            "label": 'Loss (Validation)',
+            "data": loss_val,
+            "borderColor": '#ff6384',
+            "backgroundColor": 'rgba(255, 99, 132, 0.1)',
+            "fill": True,
+            "borderWidth": 2,
+            "borderDash": [5, 5],
+            "tension": 0.1
+        })
+
+    html_code = f"""
+    <html>
+    <head>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    </head>
+    <body style="margin:0;padding:0;background-color:transparent;">
+        <canvas id="lossChart" style="width:100%;height:350px;"></canvas>
+        <script>
+            const ctx = document.getElementById('lossChart').getContext('2d');
+            new Chart(ctx, {{
+                type: 'line',
+                data: {{
+                    labels: {epochs},
+                    datasets: {json.dumps(datasets)}
+                }},
+                options: {{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {{
+                        x: {{ title: {{ display: true, text: 'Epoch', color: '#888' }}, grid: {{ color: 'rgba(200,200,200,0.1)' }} }},
+                        y: {{ title: {{ display: true, text: 'Loss', color: '#888' }}, grid: {{ color: 'rgba(200,200,200,0.1)' }} }}
+                    }},
+                    plugins: {{
+                        legend: {{ labels: {{ color: '#888' }} }}
+                    }}
+                }}
+            }});
+        </script>
+    </body>
+    </html>
+    """
+    st.components.v1.html(html_code, height=380)
+
+# Fungsi menggambar chart prediksi menggunakan Chart.js (Bypass PyArrow)
+def draw_chartjs_prediction(df_future):
+    col_asli = [c for c in df_future.columns if 'Asli' in c][0]
+    col_usulan = [c for c in df_future.columns if 'Usulan' in c][0]
+    
+    dates_list = list(df_future['Tanggal'].dt.strftime('%Y-%m-%d').values)
+    val_asli = list(df_future[col_asli].values)
+    val_usulan = list(df_future[col_usulan].values)
+    
+    datasets = [
+        {
+            "label": 'Harga Asli',
+            "data": val_asli,
+            "borderColor": '#000000',
+            "backgroundColor": '#000000',
+            "pointRadius": 5,
+            "fill": False,
+            "borderWidth": 2.5
+        },
+        {
+            "label": 'Prediksi CNN-LSTM + BO (Usulan)',
+            "data": val_usulan,
+            "borderColor": '#ff0000',
+            "backgroundColor": '#ff0000',
+            "pointStyle": 'rectRot',
+            "pointRadius": 6,
+            "fill": False,
+            "borderWidth": 2,
+            "borderDash": [5, 5]
+        }
+    ]
+
+    html_code = f"""
+    <html>
+    <head>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    </head>
+    <body style="margin:0;padding:0;background-color:transparent;">
+        <canvas id="predChart" style="width:100%;height:350px;"></canvas>
+        <script>
+            const ctx = document.getElementById('predChart').getContext('2d');
+            new Chart(ctx, {{
+                type: 'line',
+                data: {{
+                    labels: {json.dumps(dates_list)},
+                    datasets: {json.dumps(datasets)}
+                }},
+                options: {{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {{
+                        x: {{ title: {{ display: true, text: 'Tanggal', color: '#888' }}, grid: {{ color: 'rgba(200,200,200,0.1)' }} }},
+                        y: {{ title: {{ display: true, text: 'Harga Saham (Rp)', color: '#888' }}, grid: {{ color: 'rgba(200,200,200,0.1)' }} }}
+                    }},
+                    plugins: {{
+                        legend: {{ labels: {{ color: '#888' }} }}
+                    }}
+                }}
+            }});
+        </script>
+    </body>
+    </html>
+    """
+    st.components.v1.html(html_code, height=380)
+
 # Judul Utama
 st.title("📈 Dashboard Riset Prediksi Saham Telkom")
 st.markdown("Dashboard ini mengambil data **Final** dari setiap tahap penelitian (Output: Excel)")
@@ -119,15 +247,7 @@ elif menu == "Tahap 6: Training History":
     
     if df_history is not None:
         st.subheader("Kurva Loss (Pelatihan) - Interaktif")
-        loss_col = 'loss' if 'loss' in df_history.columns else df_history.columns[1]
-        chart_cols = [loss_col]
-        if 'val_loss' in df_history.columns:
-            chart_cols.append('val_loss')
-        
-        # Buat DataFrame khusus untuk line chart
-        df_chart = df_history[chart_cols].copy()
-        df_chart.index = range(1, len(df_chart) + 1) # Set index sebagai Epoch (dimulai dari 1)
-        st.line_chart(df_chart)
+        draw_chartjs_loss(df_history)
     else:
         st.error(f"File {excel_files['t6']} tidak ditemukan.")
 
@@ -162,15 +282,7 @@ elif menu == "Tahap 7 & 8: Hasil & Proyeksi":
                 st.markdown(df_to_markdown(df_future))
                 # Visualisasi
                 st.subheader("Grafik Proyeksi Harga Januari 2025 (Interaktif)")
-                
-                # Deteksi Nama Kolom
-                col_asli = [c for c in df_future.columns if 'Asli' in c][0]
-                col_usulan = [c for c in df_future.columns if 'Usulan' in c][0]
-                
-                # Buat DataFrame khusus untuk line chart dengan index tanggal
-                df_chart_future = df_future.set_index('Tanggal')[[col_asli, col_usulan]].copy()
-                df_chart_future.columns = ['Harga Asli', 'Prediksi CNN-LSTM + BO (Usulan)']
-                st.line_chart(df_chart_future)
+                draw_chartjs_prediction(df_future)
 
         except Exception as e:
             st.error(f"Gagal memproses data proyeksi: {e}")
