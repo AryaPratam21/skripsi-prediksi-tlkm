@@ -1,9 +1,6 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 import os
 import json
 
@@ -107,15 +104,16 @@ elif menu == "Tahap 6: Training History":
             df_history = pd.read_excel(excel_files["t6"], sheet_name=0)
     
     if df_history is not None:
-        st.subheader("Kurva Loss (Pelatihan)")
-        fig, ax = plt.subplots(figsize=(10, 4))
-        epochs = range(1, len(df_history) + 1)
+        st.subheader("Kurva Loss (Pelatihan) - Interaktif")
         loss_col = 'loss' if 'loss' in df_history.columns else df_history.columns[1]
-        ax.plot(epochs, df_history[loss_col], label='Loss (Train)')
+        chart_cols = [loss_col]
         if 'val_loss' in df_history.columns:
-            ax.plot(epochs, df_history['val_loss'], label='Loss (Validation)', linestyle='--')
-        ax.set_xlabel("Epoch"); ax.set_ylabel("Loss"); ax.legend(); ax.grid(True, alpha=0.3)
-        st.pyplot(fig)
+            chart_cols.append('val_loss')
+        
+        # Buat DataFrame khusus untuk line chart
+        df_chart = df_history[chart_cols].copy()
+        df_chart.index = range(1, len(df_chart) + 1) # Set index sebagai Epoch (dimulai dari 1)
+        st.line_chart(df_chart)
     else:
         st.error(f"File {excel_files['t6']} tidak ditemukan.")
 
@@ -149,19 +147,16 @@ elif menu == "Tahap 7 & 8: Hasil & Proyeksi":
                 st.subheader(f"Tabel 4.8: Proyeksi 7 Hari ke Depan (Data dari {sheet_target})")
                 st.dataframe(df_future, use_container_width=True)
                 # Visualisasi
-                st.subheader("Grafik Proyeksi Harga Januari 2025")
-                fig, ax = plt.subplots(figsize=(10, 4))
+                st.subheader("Grafik Proyeksi Harga Januari 2025 (Interaktif)")
                 
                 # Deteksi Nama Kolom
                 col_asli = [c for c in df_future.columns if 'Asli' in c][0]
                 col_usulan = [c for c in df_future.columns if 'Usulan' in c][0]
                 
-                ax.plot(df_future['Tanggal'], df_future[col_asli], marker='o', label='Harga Asli', color='black')
-                ax.plot(df_future['Tanggal'], df_future[col_usulan], marker='D', label='Prediksi CNN-LSTM + BO (Usulan)', linestyle='--', color='red')
-            
-                ax.set_ylabel("Harga (Rp)"); ax.set_xlabel("Tanggal"); ax.legend(); ax.grid(True, alpha=0.3)
-                plt.xticks(rotation=15)
-                st.pyplot(fig)
+                # Buat DataFrame khusus untuk line chart dengan index tanggal
+                df_chart_future = df_future.set_index('Tanggal')[[col_asli, col_usulan]].copy()
+                df_chart_future.columns = ['Harga Asli', 'Prediksi CNN-LSTM + BO (Usulan)']
+                st.line_chart(df_chart_future)
 
         except Exception as e:
             st.error(f"Gagal memproses data proyeksi: {e}")
