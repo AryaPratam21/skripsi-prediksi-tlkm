@@ -60,7 +60,7 @@ if menu == "Tahap 1: Data Acquisition":
     if df is not None:
         df['Date'] = pd.to_datetime(df['Date'])
         st.subheader("Sampel Data Historis (10 Baris Terakhir)")
-        st.dataframe(df.tail(10), width="stretch") # Ganti use_container_width
+        st.dataframe(df.tail(10), use_container_width=True) # Ganti use_container_width
         
         if df_stats is not None:
             st.subheader("Tabel 4.1: Statistik Deskriptif (Adj Close)")
@@ -71,7 +71,7 @@ elif menu == "Tahap 2: Preprocessing":
     df = load_excel(excel_files["t2"])
     if df is not None:
         st.write("Data Multivariat dengan seleksi fitur (OHLCV + Adj Close):")
-        st.dataframe(df.tail(10), width="stretch")
+        st.dataframe(df.tail(10), use_container_width=True)
     else:
         st.error(f"File {excel_files['t2']} tidak ditemukan.")
 
@@ -126,7 +126,7 @@ elif menu == "Tahap 7 & 8: Hasil & Proyeksi":
     df_eval = load_excel(excel_files["t7"])
     if df_eval is not None:
         st.subheader("Tabel 4.7: Komparasi Performa Seluruh Model")
-        st.dataframe(df_eval.astype(str), width="stretch")
+        st.dataframe(df_eval.astype(str), use_container_width=True)
         
     # 2. Prediksi 7 Hari (Tabel 4.8)
     file_t8 = excel_files["t8"]
@@ -147,7 +147,7 @@ elif menu == "Tahap 7 & 8: Hasil & Proyeksi":
                 
                 # TAMPILKAN JUDUL TABEL (Lebih Akademis daripada notifikasi st.success)
                 st.subheader(f"Tabel 4.8: Proyeksi 7 Hari ke Depan (Data dari {sheet_target})")
-                st.dataframe(df_future, width="stretch")
+                st.dataframe(df_future, use_container_width=True)
                 # Visualisasi
                 st.subheader("Grafik Proyeksi Harga Januari 2025")
                 fig, ax = plt.subplots(figsize=(10, 4))
