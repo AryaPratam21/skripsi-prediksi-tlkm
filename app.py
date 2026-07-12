@@ -204,7 +204,7 @@ if menu == "Tahap 1: Data Acquisition":
         
         if df_stats is not None:
             st.subheader("Tabel 4.1: Statistik Deskriptif (Adj Close)")
-            st.table(df_stats.astype(str)) # Konversi ke string untuk hindari Arrow Error
+            st.markdown(df_to_markdown(df_stats.astype(str))) # Ganti st.table dengan st.markdown untuk bypass PyArrow
 
 elif menu == "Tahap 2: Preprocessing":
     st.header("⚙️ Hasil Pra-pemrosesan Data")
