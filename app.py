@@ -13,6 +13,19 @@ st.set_page_config(
     layout="wide"
 )
 
+# Fungsi Utilitas untuk mengubah DataFrame menjadi tabel Markdown (Bypass PyArrow)
+def df_to_markdown(df):
+    headers = " | ".join(map(str, df.columns))
+    separator = " | ".join(["---"] * len(df.columns))
+    rows = []
+    for _, row in df.iterrows():
+        row_str = []
+        for val in row.values:
+            val_cleaned = str(val).replace('|', '\\|').replace('\n', ' ')
+            row_str.append(val_cleaned)
+        rows.append(" | ".join(row_str))
+    return f"| {headers} |\n| {separator} |\n" + "\n".join([f"| {r} |" for r in rows])
+
 # Judul Utama
 st.title("📈 Dashboard Riset Prediksi Saham Telkom")
 st.markdown("Dashboard ini mengambil data **Final** dari setiap tahap penelitian (Output: Excel)")
@@ -59,7 +72,7 @@ if menu == "Tahap 1: Data Acquisition":
     if df is not None:
         df['Date'] = pd.to_datetime(df['Date'])
         st.subheader("Sampel Data Historis (10 Baris Terakhir)")
-        st.table(df.tail(10)) # Ganti st.dataframe dengan st.table untuk bypass PyArrow
+        st.markdown(df_to_markdown(df.tail(10))) # Menggunakan Markdown untuk bypass PyArrow / Segfault
         
         if df_stats is not None:
             st.subheader("Tabel 4.1: Statistik Deskriptif (Adj Close)")
@@ -70,7 +83,7 @@ elif menu == "Tahap 2: Preprocessing":
     df = load_excel(excel_files["t2"])
     if df is not None:
         st.write("Data Multivariat dengan seleksi fitur (OHLCV + Adj Close):")
-        st.table(df.tail(10))
+        st.markdown(df_to_markdown(df.tail(10)))
     else:
         st.error(f"File {excel_files['t2']} tidak ditemukan.")
 
@@ -78,8 +91,7 @@ elif menu == "Tahap 3: Baseline Performance":
     st.header("📉 Performa Model Tunggal (Baseline)")
     df = load_excel(excel_files["t3"])
     if df is not None:
-        # PENTING: Gunakan astype(str) agar tanda '-' tidak menyebabkan error Arrow
-        st.table(df.astype(str))
+        st.markdown(df_to_markdown(df.astype(str)))
     else:
         st.error(f"File {excel_files['t3']} tidak ditemukan.")
 
@@ -92,7 +104,7 @@ elif menu == "Tahap 4 & 5: Bayesian Results":
         except:
             df = pd.read_excel(excel_files["t4_5"], sheet_name=1)
     if df is not None:
-        st.table(df.astype(str)) # Gunakan astype(str)
+        st.markdown(df_to_markdown(df.astype(str)))
     else:
         st.error(f"File {excel_files['t4_5']} tidak ditemukan.")
 
@@ -126,7 +138,7 @@ elif menu == "Tahap 7 & 8: Hasil & Proyeksi":
     df_eval = load_excel(excel_files["t7"])
     if df_eval is not None:
         st.subheader("Tabel 4.7: Komparasi Performa Seluruh Model")
-        st.table(df_eval.astype(str))
+        st.markdown(df_to_markdown(df_eval.astype(str)))
         
     # 2. Prediksi 7 Hari (Tabel 4.8)
     file_t8 = excel_files["t8"]
@@ -147,7 +159,7 @@ elif menu == "Tahap 7 & 8: Hasil & Proyeksi":
                 
                 # TAMPILKAN JUDUL TABEL (Lebih Akademis daripada notifikasi st.success)
                 st.subheader(f"Tabel 4.8: Proyeksi 7 Hari ke Depan (Data dari {sheet_target})")
-                st.table(df_future)
+                st.markdown(df_to_markdown(df_future))
                 # Visualisasi
                 st.subheader("Grafik Proyeksi Harga Januari 2025 (Interaktif)")
                 
