@@ -212,9 +212,20 @@ if menu == "Tahap 1: Data Acquisition":
 elif menu == "Tahap 2: Preprocessing":
     st.header("⚙️ Hasil Pra-pemrosesan Data")
     df = load_excel(excel_files["t2"])
+    df_stats = None
+    if os.path.exists(excel_files["t2"]):
+        try:
+            df_stats = pd.read_excel(excel_files["t2"], sheet_name='Statistik_Dataset_Bab4')
+        except:
+            pass
+            
     if df is not None:
         st.write("Data Multivariat dengan seleksi fitur (OHLCV + Adj Close):")
         st.markdown(df_to_markdown(df.tail(10)))
+        
+        if df_stats is not None:
+            st.subheader("Statistik Alokasi Pembagian Dataset")
+            st.markdown(df_to_markdown(df_stats.astype(str)))
     else:
         st.error(f"File {excel_files['t2']} tidak ditemukan.")
 
@@ -229,7 +240,19 @@ elif menu == "Tahap 3: Data Transformation":
 elif menu == "Tahap 4: Bayesian HPO & Training":
     st.header("🧠 Optimasi Bayesian & Riwayat Pelatihan")
     
-    # 1. Hasil HPO (Tabel 4.6)
+    # 1. Rentang Pencarian (Tabel 4.5)
+    df_space = None
+    if os.path.exists(excel_files["t4"]):
+        try:
+            df_space = pd.read_excel(excel_files["t4"], sheet_name='Tabel_4.5_Rentang_Pencarian')
+        except:
+            pass
+            
+    if df_space is not None:
+        st.subheader("Tabel 4.5: Rentang Batas Pencarian Parameter (Optuna Space)")
+        st.markdown(df_to_markdown(df_space.astype(str)))
+        
+    # 2. Hasil HPO (Tabel 4.6)
     df_hpo = None
     if os.path.exists(excel_files["t4"]):
         try:
@@ -271,11 +294,22 @@ elif menu == "Tahap 5: Evaluasi & Stabilitas":
     # Laporan Uji Stabilitas
     file_stability = "tahap4_summary_stabilitas.xlsx"
     df_stability = load_excel(file_stability)
+    df_summary = None
+    if os.path.exists(file_stability):
+        try:
+            df_summary = pd.read_excel(file_stability, sheet_name='Ringkasan_Uji_Stabilitas')
+        except:
+            pass
+            
     if df_stability is not None:
         st.subheader("Tabel Rekapitulasi Uji Stabilitas Parameter (5 Run)")
         st.markdown(df_to_markdown(df_stability.astype(str)))
+        
+        if df_summary is not None:
+            st.subheader("Hasil Validasi Stabilitas Parameter (Delta MAPE)")
+            st.markdown(df_to_markdown(df_summary.astype(str)))
     else:
-        st.warning("File rekap stabilitas belum tersedia. Jalankan Tahap 4.")
+        st.warning("File rekap stabilitas belum tersedia. Jalankan Tahap 5.")
 
 elif menu == "Tahap 6: Prediksi & Komparasi Harga":
     st.header("🔮 Prediksi Harga Saham 7 Hari ke Depan (Proyeksi)")
