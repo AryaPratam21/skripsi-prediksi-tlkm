@@ -1,0 +1,1 @@
+{"cnn_lstm": {"filters": 128, "kernel_size": 2, "units": 84, "dropout": 0.13342608223954958, "lr": 0.0025614433630340027, "batch_size": 16, "window_size": 12, "best_trial": 1, "best_mape": 0.016125057920374608}}

@@ -1,1 +1,1 @@
-{"bilstm": {"filters": 64, "kernel_size": 2, "units": 98, "dropout": 0.35804141101622144, "lr": 0.006684623994830784, "batch_size": 64, "window_size": 10, "best_trial": 29}, "cnn_lstm": {"filters": 32, "kernel_size": 4, "units": 137, "dropout": 0.15001634949373505, "lr": 0.005755084571817792, "batch_size": 16, "window_size": 57, "best_trial": 45}}
+{"cnn_lstm": {"filters": 128, "kernel_size": 2, "units": 84, "dropout": 0.13342608223954958, "lr": 0.0025614433630340027, "batch_size": 16, "window_size": 12, "best_trial": 1}}

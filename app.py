@@ -163,10 +163,10 @@ st.sidebar.title("🔍 Menu Navigasi")
 menu = st.sidebar.radio("Pilih Tahap:", [
     "Tahap 1: Data Acquisition",
     "Tahap 2: Preprocessing",
-    "Tahap 3: Baseline Performance",
-    "Tahap 4 & 5: Bayesian Results",
-    "Tahap 6: Training History",
-    "Tahap 7 & 8: Hasil & Proyeksi"
+    "Tahap 3: Data Transformation",
+    "Tahap 4: Bayesian HPO & Training",
+    "Tahap 5: Evaluasi & Stabilitas",
+    "Tahap 6: Prediksi & Komparasi Harga"
 ])
 
 # Pemetaan File Excel Final
@@ -174,10 +174,10 @@ excel_files = {
     "t1": "tahap1_pengumpulan_data.xlsx",
     "t2": "tahap2_hasil_preprocessing.xlsx",
     "t3": "tahap3_hasil_baseline.xlsx",
-    "t4_5": "tahap4_5_hasil_optimasi.xlsx",
-    "t6": "tahap6_hasil_training.xlsx",
-    "t7": "tahap7_hasil_evaluasi.xlsx",
-    "t8": "tahap8_hasil_prediksi.xlsx"
+    "t4": "tahap4_hasil_optimasi.xlsx",
+    "t5_train": "tahap5_hasil_training.xlsx",
+    "t5_eval": "tahap5_hasil_evaluasi.xlsx",
+    "t6_pred": "tahap6_hasil_prediksi_komparasi.xlsx"
 }
 
 # Fungsi Membaca Data
@@ -195,16 +195,19 @@ if menu == "Tahap 1: Data Acquisition":
     df = load_excel(excel_files["t1"])
     df_stats = None
     if os.path.exists(excel_files["t1"]):
-        df_stats = pd.read_excel(excel_files["t1"], sheet_name='Statistik_Deskriptif_Bab4')
+        try:
+            df_stats = pd.read_excel(excel_files["t1"], sheet_name='Statistik_Deskriptif_Bab4')
+        except:
+            pass
 
     if df is not None:
         df['Date'] = pd.to_datetime(df['Date'])
         st.subheader("Sampel Data Historis (10 Baris Terakhir)")
-        st.markdown(df_to_markdown(df.tail(10))) # Menggunakan Markdown untuk bypass PyArrow / Segfault
+        st.markdown(df_to_markdown(df.tail(10)))
         
         if df_stats is not None:
             st.subheader("Tabel 4.1: Statistik Deskriptif (Adj Close)")
-            st.table(df_stats.astype(str)) # Konversi ke string untuk hindari Arrow Error
+            st.markdown(df_to_markdown(df_stats.astype(str)))
 
 elif menu == "Tahap 2: Preprocessing":
     st.header("⚙️ Hasil Pra-pemrosesan Data")
@@ -215,79 +218,86 @@ elif menu == "Tahap 2: Preprocessing":
     else:
         st.error(f"File {excel_files['t2']} tidak ditemukan.")
 
-elif menu == "Tahap 3: Baseline Performance":
-    st.header("📉 Performa Model Tunggal (Baseline)")
+elif menu == "Tahap 3: Data Transformation":
+    st.header("🔄 Hasil Transformasi Data (Sliding Window & Normalisasi)")
     df = load_excel(excel_files["t3"])
     if df is not None:
         st.markdown(df_to_markdown(df.astype(str)))
     else:
         st.error(f"File {excel_files['t3']} tidak ditemukan.")
 
-elif menu == "Tahap 4 & 5: Bayesian Results":
-    st.header("🧠 Hyperparameter Hasil Optimasi (Tabel 4.6)")
-    df = None
-    if os.path.exists(excel_files["t4_5"]):
-        try:
-            df = pd.read_excel(excel_files["t4_5"], sheet_name='Tabel_4.6_Hasil_Optimasi')
-        except:
-            df = pd.read_excel(excel_files["t4_5"], sheet_name=1)
-    if df is not None:
-        st.markdown(df_to_markdown(df.astype(str)))
-    else:
-        st.error(f"File {excel_files['t4_5']} tidak ditemukan.")
-
-elif menu == "Tahap 6: Training History":
-    st.header("🚀 History Pelatihan Model Usulan")
-    df_history = None
-    if os.path.exists(excel_files["t6"]):
-        try:
-            df_history = pd.read_excel(excel_files["t6"], sheet_name='Training_History')
-        except:
-            df_history = pd.read_excel(excel_files["t6"], sheet_name=0)
+elif menu == "Tahap 4: Bayesian HPO & Training":
+    st.header("🧠 Optimasi Bayesian & Riwayat Pelatihan")
     
+    # 1. Hasil HPO (Tabel 4.6)
+    df_hpo = None
+    if os.path.exists(excel_files["t4"]):
+        try:
+            df_hpo = pd.read_excel(excel_files["t4"], sheet_name='Tabel_4.6_Hasil_Optimasi')
+        except:
+            df_hpo = pd.read_excel(excel_files["t4"], sheet_name=1)
+            
+    if df_hpo is not None:
+        st.subheader("Tabel 4.6: Hyperparameter Hasil Optimasi (Optuna)")
+        st.markdown(df_to_markdown(df_hpo.astype(str)))
+    else:
+        st.error(f"File {excel_files['t4']} tidak ditemukan.")
+        
+    # 2. Kurva Loss Pelatihan
+    df_history = None
+    if os.path.exists(excel_files["t5_train"]):
+        try:
+            df_history = pd.read_excel(excel_files["t5_train"], sheet_name='Training_History')
+        except:
+            df_history = pd.read_excel(excel_files["t5_train"], sheet_name=0)
+            
     if df_history is not None:
-        st.subheader("Kurva Loss (Pelatihan) - Interaktif")
+        st.subheader("Kurva Loss Pelatihan Model Usulan (Interaktif)")
         draw_chartjs_loss(df_history)
     else:
-        st.error(f"File {excel_files['t6']} tidak ditemukan.")
+        st.error(f"File {excel_files['t5_train']} tidak ditemukan.")
 
-elif menu == "Tahap 7 & 8: Hasil & Proyeksi":
-    st.header("🏆 Evaluasi Akhir & Proyeksi 7 Hari")
+elif menu == "Tahap 5: Evaluasi & Stabilitas":
+    st.header("🏆 Evaluasi Akhir & Stabilitas Parameter")
     
-    # 1. Laporan Akhir (Tabel 4.7)
-    df_eval = load_excel(excel_files["t7"])
+    # Laporan Akhir (Tabel 4.7)
+    df_eval = load_excel(excel_files["t5_eval"])
     if df_eval is not None:
-        st.subheader("Tabel 4.7: Komparasi Performa Seluruh Model")
+        st.subheader("Tabel 4.7: Komparasi Performa Akurasi Seluruh Model")
         st.markdown(df_to_markdown(df_eval.astype(str)))
+    else:
+        st.error(f"File {excel_files['t5_eval']} tidak ditemukan.")
         
-    # 2. Prediksi 7 Hari (Tabel 4.8)
-    file_t8 = excel_files["t8"]
-    if os.path.exists(file_t8):
+    # Laporan Uji Stabilitas
+    file_stability = "tahap4_summary_stabilitas.xlsx"
+    df_stability = load_excel(file_stability)
+    if df_stability is not None:
+        st.subheader("Tabel Rekapitulasi Uji Stabilitas Parameter (5 Run)")
+        st.markdown(df_to_markdown(df_stability.astype(str)))
+    else:
+        st.warning("File rekap stabilitas belum tersedia. Jalankan Tahap 4.")
+
+elif menu == "Tahap 6: Prediksi & Komparasi Harga":
+    st.header("🔮 Prediksi Harga Saham 7 Hari ke Depan (Proyeksi)")
+    
+    file_pred = excel_files["t6_pred"]
+    if os.path.exists(file_pred):
         try:
-            # Deteksi Nama Sheet Otomatis (Tetap dipertahankan agar anti-error)
-            xl = pd.ExcelFile(file_t8)
-            daftar_sheet = xl.sheet_names
-            sheet_target = next((s for s in daftar_sheet if 'Tabel' in s), daftar_sheet[0])
-            
-            # Baca data
-            df_future = pd.read_excel(file_t8, sheet_name=sheet_target)
-            
+            # Baca data proyeksi 7 hari bursa
+            df_future = pd.read_excel(file_pred, sheet_name='Proyeksi_7_Hari_Jan2025')
             if df_future is not None:
-                # Bersihkan kolom
-                df_future.columns = df_future.columns.str.strip()
+                st.subheader("Tabel 4.8: Proyeksi Bergulir 7 Hari Kerja ke Depan (Januari 2025)")
                 df_future['Tanggal'] = pd.to_datetime(df_future['Tanggal'])
-                
-                # TAMPILKAN JUDUL TABEL (Lebih Akademis daripada notifikasi st.success)
-                st.subheader(f"Tabel 4.8: Proyeksi 7 Hari ke Depan (Data dari {sheet_target})")
                 st.markdown(df_to_markdown(df_future))
-                # Visualisasi
+                
+                # Visualisasi grafik interaktif
                 st.subheader("Grafik Proyeksi Harga Januari 2025 (Interaktif)")
                 draw_chartjs_prediction(df_future)
-
+                
         except Exception as e:
-            st.error(f"Gagal memproses data proyeksi: {e}")
+            st.error(f"Gagal memproses data prediksi: {e}")
     else:
-        st.error(f"File {file_t8} tidak ditemukan.")
+        st.error(f"File {file_pred} tidak ditemukan. Silakan jalankan Tahap 6.")
 
 st.sidebar.markdown("---")
 st.sidebar.caption("Dashboard Penelitian Prediksi Harga Saham PT TELKOM")
