@@ -97,7 +97,7 @@ def run_evaluation_interpretation():
         ])
         df_summary_stats.to_excel(writer, sheet_name='Ringkasan_Uji_Stabilitas', index=False)
         
-    print("       * Berkas stabilitas berhasil disusun & disimpan ke: tahap4_summary_stabilitas.xlsx")
+    print("       * Berkas stabilitas berhasil disusun & disimpan ke: tahap5_summary_stabilitas.xlsx")
     
     # Tampilkan Uji Stabilitas di Terminal
     print("\n" + "="*120)

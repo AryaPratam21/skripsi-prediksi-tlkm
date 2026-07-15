@@ -292,7 +292,7 @@ elif menu == "Tahap 5: Evaluasi & Stabilitas":
         st.error(f"File {excel_files['t5_eval']} tidak ditemukan.")
         
     # Laporan Uji Stabilitas
-    file_stability = "tahap4_summary_stabilitas.xlsx"
+    file_stability = "tahap5_summary_stabilitas.xlsx"
     df_stability = load_excel(file_stability)
     df_summary = None
     if os.path.exists(file_stability):
